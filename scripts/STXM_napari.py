@@ -190,6 +190,52 @@ def load_tiff_stack(data_dir, energy_file, xstep, ystep,viewer=None, flip_vertic
 
     return viewer, energies_list, image_stack
 
+# %%
+import napari
+from PyQt5.QtWidgets import QLabel, QLineEdit, QWidget, QVBoxLayout
+import numpy as np
+
+def create_element_map(viewer, image_stack, xstep, ystep, element="C", 
+                       pre_range=(280, 283), post_range=(297, 300)):
+    """
+    Generate an element/chemical map by calculating the difference between two energy ranges.
+    
+    Parameters:
+        viewer: napari.Viewer instance.
+        image_stack:
+        xstep, ystep: Physical scale per pixel (μm).
+        element: Name of the element or functional group for the map.
+        pre_range, post_range: Energy ranges (eV) to calculate the mean for subtraction.
+    """
+    energies = viewer.layers["image_stack"].metadata.get("energies", [])
+    energies = np.array(energies)
+
+    # Error handling if energy metadata is missing
+    if len(energies) == 0:
+        print("❌ Error: No energy information found in metadata.")
+        return None
+
+    # calculating
+    pre_indices = np.where((energies >= pre_range[0]) & (energies <= pre_range[1]))[0]
+    post_indices = np.where((energies >= post_range[0]) & (energies <= post_range[1]))[0]
+
+    first_image = np.mean(image_stack[pre_indices], axis=0)
+    last_image = np.mean(image_stack[post_indices], axis=0)
+
+    first_image = np.clip(first_image, a_min=0, a_max=None)
+    last_image = np.clip(last_image, a_min=0, a_max=None)
+
+    element_distribution = last_image - first_image
+
+    # Add the distribution map 
+    layer_name = f"{element} map ({energies[pre_indices[0]]:.1f}-{energies[pre_indices[-1]]:.1f} eV vs {energies[post_indices[0]]:.1f}-{energies[post_indices[-1]]:.1f} eV)"
+    element_distribution_image_layer = viewer.add_image(
+        element_distribution,
+        name=layer_name,
+        scale=(ystep, xstep), # Aligning with physical scale
+    )
+
+    return element_distribution
 
 # %%
 # ROI Extraction Functions
