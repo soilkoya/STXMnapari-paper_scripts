@@ -244,7 +244,7 @@ from PyQt5.QtCore import QTimer
 import numpy as np
 import napari
 
-def create_layers(viewer, xstep):
+def create_layers(viewer, xstep, image_layer_name="image_stack"):
     
     """
     Create Napari Shapes layer and Points layer for ROI.
@@ -257,7 +257,14 @@ def create_layers(viewer, xstep):
         tuple: A tuple containing (shapes_layer, points_layer).
     """
 
-    image_layer = viewer.layers['image_stack']
+    # Check whether the specified layer exists
+    if image_layer_name not in viewer.layers:
+        raise ValueError(
+            f"Layer '{image_layer_name}' not found in viewer."
+        )
+
+    image_layer = viewer.layers[image_layer_name]
+    
     # Get scale and translate from the image layer
     scale = np.array(image_layer.scale)         # e.g. (Z, Y, X)
     translate = np.array(image_layer.translate)
@@ -270,14 +277,9 @@ def create_layers(viewer, xstep):
         xy_translate = tuple(translate)
 
     """Create Napari Shapes layer and Points layer for ROI"""
-    shapes_layer = viewer.add_shapes(name="ROI",
-                                      shape_type="polygon",
-                                      face_color=[1, 1, 1, 0] ,
-                                      scale=xy_scale,
-                                      translate=xy_translate,
-                                      blending="translucent")
+
     points_layer = viewer.add_points([], 
-                                     name="ROI label", 
+                                     name="ROI labels", 
                                      face_color='transparent', 
                                      border_color='transparent', 
                                      scale=xy_scale, 
@@ -288,7 +290,13 @@ def create_layers(viewer, xstep):
         "anchor": "center"
     }
     
-
+    shapes_layer = viewer.add_shapes(name="ROI shapes",
+                                    shape_type="polygon",
+                                    face_color=[1, 1, 1, 0] ,
+                                    scale=xy_scale,
+                                    translate=xy_translate,
+                                    blending="translucent")
+    
     return shapes_layer, points_layer
 
 def compute_polygon_center(polygon):
@@ -420,7 +428,7 @@ def adjust_text_size(viewer, points_layer):
 
 
 
-def roi_manager(viewer, xstep):
+def roi_manager(viewer, xstep, image_layer_name="image_stack"):
     """
     Set up ROI management in the Napari viewer.
 
@@ -431,7 +439,7 @@ def roi_manager(viewer, xstep):
     Returns:
         tuple: A tuple containing (shapes_layer, points_layer).
     """
-    shapes_layer, points_layer = create_layers(viewer, xstep)
+    shapes_layer, points_layer = create_layers(viewer, xstep, image_layer_name=image_layer_name)
     
     # update text size
     def update_font_size():
@@ -699,7 +707,7 @@ class ROIButtonsWidget(QWidget):
 
 
 
-def add_roi_controls(viewer, shapes_layer, image_stack, energies):
+def roi_plot(viewer, shapes_layer, image_stack, energies):
     """
     Create the ROI control widget.
 
@@ -719,7 +727,7 @@ def add_roi_controls(viewer, shapes_layer, image_stack, energies):
     def on_update(roi_df, fig):
         latest_data["roi_df"] = roi_df
         latest_data["fig"] = fig
-        print("✅ ROIが更新されました:")
+        print("ROI update")
         print(roi_df.head())
 
     widget = ROIButtonsWidget(viewer, shapes_layer, image_stack, energies, on_update_callback=on_update)
@@ -732,7 +740,7 @@ import os
 import numpy as np
 import string
 
-def save_shapes_data_per_roi(shapes_layer, base_dir, basename="roi_example"):
+def save_shapes_roi(shapes_layer, base_dir, basename="roi_example"):
     """
     Save each ROI shape data into a single compressed NumPy file (.npz).
     Each ROI is stored with a label key (e.g., 'roi_a', 'roi_b').
