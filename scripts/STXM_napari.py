@@ -1,21 +1,17 @@
 # %%
-
-# read stack informaion from hdrfile
+# read stack information from hdr file
 import os
 import re
+
 def find_hdr_file(directory):
     """
-    Returns the path to the unique .hdr file in the specified directory.
+    Returns the path to the unique .hdr file in the directory.
 
     Args:
-        directory (str): The path to the directory to search.
+        directory (str): The path to the directory.
 
     Returns:
         str: The full path to the .hdr file.
-
-    Raises:
-        FileNotFoundError: If no .hdr file is found.
-        ValueError: If multiple .hdr files are found.
     """
     hdr_files = [f for f in os.listdir(directory) if f.endswith('.hdr')]
     if len(hdr_files) == 1:
@@ -66,11 +62,11 @@ def read_hdr(file_path):
 
 def save_energy(energy_list, base_dir, textfile_name="energy.txt"):
     """
-    Saves the energy_list to the specified base directory.
+    Saves the energy_list to the directory.
 
     Args:
         energy_list (list): List of (index, energy_value) tuples.
-        base_dir (str): Destination directory.
+        base_dir (str): Directory.
         textfile_name (str): Name of the output file.
     """
     # Check if the base directory exists
@@ -94,17 +90,16 @@ import numpy as np
 import tifffile
 import napari
 
-# TIFFスタックとエネルギー情報を読み込む関数
+# Loads a TIFF image stack from a directory into a napari viewer.
 def load_tiff_stack(data_dir, energy_file, xstep, ystep,viewer=None, flip_vertical=True):
     """
-    Loads a TIFF image stack from a directory, associates it with energy metadata,
-    and displays it in a Napari viewer.
+    Loads a TIFF image stack from a directory into a Napari viewer.
 
     Args:
         data_dir (str): Path to the directory containing TIFF files.
         energy_file (str): Path to the text file containing energy information.
-        xstep (float): Scale/spacing for the X-axis.
-        ystep (float): Scale/spacing for the Y-axis.
+        xstep (float): Step size for the X.
+        ystep (float): Step size for the Y.
         viewer (napari.Viewer, optional): Existing Napari viewer instance.
         flip_vertical (bool): Whether to flip images vertically. Defaults to True.
     
@@ -131,7 +126,7 @@ def load_tiff_stack(data_dir, energy_file, xstep, ystep,viewer=None, flip_vertic
             else:
                 print(f"Skipping invalid line: {line.strip()}")  
 
-    # Import TIFF files from the directory
+    # Load TIFF files from the directory
     tiff_files = []
     for f in os.listdir(data_dir):
         if f.endswith(('.tif', '.tiff')):
@@ -141,7 +136,7 @@ def load_tiff_stack(data_dir, energy_file, xstep, ystep,viewer=None, flip_vertic
                 print(f"Excluding: {f} (No numbers found)")
 
 
-    # import tiff file
+    # Load tiff file
     tiff_files = [f for f in os.listdir(data_dir) if f.endswith(('.tif', '.tiff'))]
     
      # Helper function to extract numerical index for sorting
@@ -192,7 +187,7 @@ def load_tiff_stack(data_dir, energy_file, xstep, ystep,viewer=None, flip_vertic
 
 # %%
 import napari
-from PyQt5.QtWidgets import QLabel, QLineEdit, QWidget, QVBoxLayout
+from PyQt5.QtWidgets import QWidget, QVBoxLayout
 import numpy as np
 
 def create_element_map(viewer, image_stack, xstep, ystep, element="C", 
@@ -202,9 +197,9 @@ def create_element_map(viewer, image_stack, xstep, ystep, element="C",
     
     Parameters:
         viewer: napari.Viewer instance.
-        image_stack:
-        xstep, ystep: Physical scale per pixel (μm).
-        element: Name of the element or functional group for the map.
+        image_stack: image stack
+        xstep, ystep: Step size
+        element: Name of the element 
         pre_range, post_range: Energy ranges (eV) to calculate the mean for subtraction.
     """
     energies = viewer.layers["image_stack"].metadata.get("energies", [])
@@ -251,13 +246,13 @@ def create_layers(viewer, xstep, image_layer_name="image_stack"):
 
     Args:
         viewer (napari.Viewer): The active Napari viewer instance.
-        xstep (float): The step size for the X-axis (used for scaling/calibration).
+        xstep (float): The step size for the X-axis (used for scaling).
 
     Returns:
         tuple: A tuple containing (shapes_layer, points_layer).
     """
 
-    # Check whether the specified layer exists
+    # Check whether the layer exists
     if image_layer_name not in viewer.layers:
         raise ValueError(
             f"Layer '{image_layer_name}' not found in viewer."
@@ -316,7 +311,7 @@ def update_roi_data( event, shapes_layer, points_layer):
     # Assign labels: 'a', 'b', 'c', ...
     labels = [chr(97 + i) for i in range(len(centers))]  
     
-    # Define color palette (Colorblind-friendly colors)
+    # Define color palette 
     colors = {
         "a": "#E69F00",  # Orange
         "b": "#56B4E9",  # Sky Blue
@@ -434,7 +429,7 @@ def roi_manager(viewer, xstep, image_layer_name="image_stack"):
 
     Args:
         viewer (napari.Viewer): Napari viewer instance.
-        xstep (float): Step size for X-axis calibration.
+        xstep (float): Step size for X-axis.
 
     Returns:
         tuple: A tuple containing (shapes_layer, points_layer).
@@ -448,7 +443,7 @@ def roi_manager(viewer, xstep, image_layer_name="image_stack"):
     # Set up a timer to update every second
     timer = QTimer(viewer.window.qt_viewer)
     timer.timeout.connect(update_font_size)
-    timer.start(1000)  # 1000ミリ秒 (1秒) ごとに更新
+    timer.start(1000)  
 
     shapes_layer.events.data.connect(lambda event: update_roi_data(event, shapes_layer, points_layer))
     setup_roi_buttons(shapes_layer, points_layer, viewer)
@@ -464,7 +459,7 @@ from PyQt5.QtWidgets import QWidget, QPushButton, QVBoxLayout, QSizePolicy
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 import pandas as pd
 
-# Define color palette (Colorblind-friendly)
+# Define color palette
 colors = {
         "a": "#E69F00",  # Orange
         "b": "#56B4E9",  # Sky Blue
@@ -478,15 +473,15 @@ colors = {
 
 def compute_roi_intensity_mean(roi, image_stack, energies):
     """
-    Calculate the mean intensity value within an ROI across an image stack.
+    Calculate the mean intensity value within an ROI.
 
     Args:
-        roi (numpy.ndarray): Array of coordinates defining the polygon ROI.
-        image_stack (numpy.ndarray): 3D image stack (Z, Y, X).
-        energies (list or numpy.ndarray): Energy values corresponding to each slice in the stack.
+        roi (numpy.ndarray): Array of coordinates defining by roi_manager .
+        image_stack (numpy.ndarray): image stack.
+        energies (list or numpy.ndarray): Energy values.
 
     Returns:
-        tuple: (unique_energies, mean_intensities) where mean_intensities is a numpy array.
+        tuple: A tuple containing (unique_energies, mean_intensities)
     """
     all_intensities = []
     all_energies = []
@@ -517,11 +512,11 @@ def compute_roi_intensity_mean(roi, image_stack, energies):
 
 def plot_roi_intensity_mean(shapes_layer, image_stack, energies, ax=None):
     """
-    Plot the mean intensity values of ROIs against energy values.
+    Plot the mean intensity values of ROIs.
 
     Args:
         shapes_layer (napari.layers.Shapes): Napari layer containing the ROI data.
-        image_stack (numpy.ndarray): 3D image data.
+        image_stack (numpy.ndarray): image stack
         energies (list or numpy.ndarray): Energy values for the x-axis.
         ax (matplotlib.axes.Axes, optional): Existing axes to plot on. Defaults to None.
 
@@ -556,7 +551,7 @@ def plot_roi_intensity_mean(shapes_layer, image_stack, energies, ax=None):
 class ROIButtonsWidget(QWidget):
     def __init__(self, viewer, shapes_layer, image_stack, energies, on_update_callback=None):
         """
-        Custom Qt Widget for plotting ROI spectra within Napari.
+        Custom Qt Widget for plotting ROI spectra.
 
         Args:
             viewer (napari.Viewer): Napari viewer instance.
@@ -629,8 +624,7 @@ class ROIButtonsWidget(QWidget):
 
     def update_vertical_line(self, event=None):
         """
-        Update the vertical line and energy text based on Napari's current slice.
-
+        Update the vertical line based on Napari's current slice.
         """
         ax = self.ax
         if ax is None:
@@ -647,7 +641,7 @@ class ROIButtonsWidget(QWidget):
         if self.current_slice_line:
             self.current_slice_line.remove()
 
-        # Draw new vertical line at
+        # Draw new vertical line
         self.current_slice_line = ax.axvline(
             x=current_energy,
             color="black",
@@ -677,8 +671,8 @@ class ROIButtonsWidget(QWidget):
 
     def generate_roi_dataframe(self):
         """
-        Collect intensity data from all ROIs and compile them into a single DataFrame.
-
+        Compile the mean intensity of each ROI into a DataFrame.
+        
         Returns:
             pandas.DataFrame: A DataFrame containing 'Energy', 'Mean Intensity', and 'ROI' labels.
         """
@@ -710,11 +704,11 @@ class ROIButtonsWidget(QWidget):
 def roi_plot(viewer, shapes_layer, image_stack, energies):
     """
     Create the ROI control widget.
-
+    
     Args:
         viewer (napari.Viewer): Napari viewer instance.
         shapes_layer (napari.layers.Shapes): Layer containing ROI shapes.
-        image_stack (numpy.ndarray): image data.
+        image_stack (numpy.ndarray): image stack.
         energies (list or numpy.ndarray): Energy values for the x-axis.
 
     Returns:
@@ -743,18 +737,14 @@ import string
 def save_shapes_roi(shapes_layer, base_dir, basename="roi_example"):
     """
     Save each ROI shape data into a single compressed NumPy file (.npz).
-    Each ROI is stored with a label key (e.g., 'roi_a', 'roi_b').
 
     Args:
         shapes_layer (napari.layers.Shapes): The Napari layer containing ROI data.
-        base_dir (str): The directory where the file will be saved.
-        basename (str, optional): The name of the output file. Defaults to "roi_example".
+        base_dir (str): The directory.
+        basename (str, optional): The name of the output file. 
 
     Returns:
         str: The full path to the saved .npz file.
-
-    Raises:
-        ValueError: If the number of ROIs exceeds 26 (limit of a-z labels).
     """
     shapes_data = shapes_layer.data
     num_rois = len(shapes_data)
@@ -766,7 +756,7 @@ def save_shapes_roi(shapes_layer, base_dir, basename="roi_example"):
     # Generate labels ['a', 'b', 'c', ...] based on the number of ROIs
     roi_names = list(string.ascii_lowercase[:num_rois])
     
-    # Create a dictionary mapping labels to ROI coordinate data
+    # Create a dictionary for ROI coordinate data
     named_rois = {f"roi_{name}": roi for name, roi in zip(roi_names, shapes_data)}
 
     # Define the save path and export as a compressed NPZ file
@@ -791,8 +781,8 @@ def normalize_roi_pre_edge(roi_df, e0=284, pre1=-4, pre2=0, norm1=8, norm2=16, n
         e0 (float):  default: 284
         pre1 (float): Start of the pre-edge range relative to e0 (default: -4).
         pre2 (float): End of the pre-edge range relative to e0 (default: 0).
-        norm1 (float): Start of the normalization range relative to e0 (default: 8).
-        norm2 (float): End of the normalization range relative to e0 (default: 16).
+        norm1 (float): Start of the post-edge range relative to e0 (default: 8).
+        norm2 (float): End of the post-edge range relative to e0 (default: 16).
         nnorm (int): Order of the polynomial used for normalization (default: 1).
         pre_post_line (bool): If True, adds 'pre_edge_line', 'post_edge_line', and 'mu' to the output (default: False).
 
@@ -821,7 +811,7 @@ def normalize_roi_pre_edge(roi_df, e0=284, pre1=-4, pre2=0, norm1=8, norm2=16, n
         
         processed_results.append(group)
     
-    # Merge all processed groups back into a single DataFrame
+    # Merge all groups into a single DataFrame
     normalize_roi_df = pd.concat(processed_results, ignore_index=True)
     
     return normalize_roi_df
@@ -852,7 +842,7 @@ def plot_roi_normalized(normalize_roi_df,
     Plot Normalized Mean Intensity vs. Energy for each ROI.
 
     Args:
-        normalize_roi_df (pandas.DataFrame): DataFrame containing normalized intensity data for each ROI.
+        normalize_roi_df (pandas.DataFrame): DataFrame containing normalized intensity data.
         ax (matplotlib.axes.Axes, optional): Existing axes to plot on. If None, a new axes is created.
         y_margin (float): Vertical margin for the y-axis.
         label_step (int): Step for x-axis tick labels.
@@ -891,7 +881,7 @@ def plot_roi_normalized(normalize_roi_df,
     xmin, xmax = ax.get_xlim()
     ymin, ymax = ax.get_ylim()
 
-    # Set x-axis ticks at intervals of 1
+    # Set x-axis ticks
     xticks = np.arange(np.floor(xmin), np.ceil(xmax) + 1, 1)
     ax.set_xticks(xticks)
 
@@ -927,7 +917,7 @@ def plot_napari_layers(img, xstep, ystep, image_stack_max=None,
                        unit="μm", title=None, cmap='gray', vmin=0.05, figsize=(3,3)):
     """
     Overlay Napari Shapes and Points layers onto a Matplotlib figure.
-
+    
     Args:
         img (np.ndarray): 2D image data (Y, X).
         xstep (float): Physical units per pixel along the X-axis.
